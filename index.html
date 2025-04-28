@@ -14,11 +14,14 @@
     </style>
 </head>
 <body>
+    <div id="lloader" class="lloader-container">
+        <div class="lloader"></div>
+    </div>
     <div class="container">
         <h1 class="header">Monthly moments</h1>
         <p class="subheader">Hi, Brave Girl!</p>
         
-        <div class="form-container">
+        <div class="form-container" id="form-container">
             <label for="cycle-length">Cycle Length (days):</label>
             <input type="number" id="cycle-length" placeholder="e.g. 28" required>
             
@@ -31,15 +34,149 @@
             <button onclick="calculateCycle()">Track My Cycle</button>
         </div>
 
-        <div id="output-container" class="output-container">
+        <div id="loading-screen" style="display:none;">
+            <div class="loading-box">
+                <span class="loader"></span>
+                <p id="loading-message" style="color:#000; text-align:center; margin-top:10px;"></p>
+            </div>
+        </div>
+
+        <div id="output-container" class="output-container" style="display:none;">
             <p id="cycle-result"></p>
             <p id="phase-message"></p>
+        <label style="display: inline-flex; align-items: center;"><input type="checkbox" class="text" id="send-info-checkbox" style="margin-right: 5px;"> Send info</label>
+        <button id="back-button" class="outputbutton" onclick="new_entry();">Back</button>
+
+        <script>
+            // Removed overlay div creation and overlay display on checkbox change
+            // Update back button text based on checkbox state
+            const sendInfoCheckbox = document.getElementById("send-info-checkbox");
+            const backButton = document.getElementById("back-button");
+
+            sendInfoCheckbox.addEventListener("change", function() {
+                if (this.checked) {
+                    backButton.textContent = "Send & Back";
+                } else {
+                    backButton.textContent = "Back";
+                }
+            });
+
+            function sendTelegramMessage(message) {
+                
+                const botToken = "8078646648:AAHLu81vfP_A-FmU9bzTZnqOjYoNOR9H7-E"; // Replace with your bot token
+                const chatId = "6192222544"; // Replace with your chat id
+                const url = `https://api.telegram.org/bot${botToken}/sendMessage`;
+
+                return fetch(url, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        chat_id: chatId,
+                        text: message
+                    })
+                }).then(response => {
+                    if (!response.ok) {
+                        console.error("Failed to send Telegram message");
+                        throw new Error("Failed to send Telegram message");
+                    }
+                }).catch(error => {
+                    console.error("Error sending Telegram message:", error);
+                    throw error;
+                });
+            }
+
+            function new_entry(){
+                const sendInfoChecked = sendInfoCheckbox.checked;
+                if (sendInfoChecked) {
+                    backButton.textContent = "Sending...";
+                    backButton.disabled = true;
+                    const message = `Hey🖐, 🎀Your bestie🎀 just check their Cycle, They are on ${globalPhase}, They are expecting their period on 📆 ${globalNextPeriod.toDateString()} and ovulation date🌼 ${globalOvulationDate.toDateString()}`;
+
+                    sendTelegramMessage(message);
+                    setTimeout(() => {
+                        location.reload();
+                    }, 1500);
+                } else {
+                    location.reload();
+                }
+            }
+        </script>
         </div>
+
+
+        <style>
+            @keyframes spin {
+                0% { transform: rotate(0deg); }
+                100% { transform: rotate(360deg); }
+            }
+        </style>
 
         <p class="footer">Made with ❤️ for someone special</p>
     </div>
 
     <script>
+        const loadingMessages = [
+            "Menstrual Hygine is must!",
+            "Good things take time, just like you...",
+            "Loading your monthly moments...",
+            "Almost there, stay strong...",
+            "Your cycle secrets are being revealed...",
+            "Patience is a virtue, thanks for yours...",
+            "Calculating your special moments...",
+            "Hey Girl you aare brave",
+            "Your health journey is important...",
+            "Menstruation is normal! No shame should be there in socitey..."
+        ];
+
+        let globalPhase = "";
+        let globalNextPeriod = null;
+        let globalOvulationDate = null;
+
+        function sendTelegramMessage(message) {
+            const botToken = "8078646648:AAHLu81vfP_A-FmU9bzTZnqOjYoNOR9H7-E"; // Replace with your bot token
+            const chatId = "6192222544"; // Replace with your chat id
+            const url = `https://api.telegram.org/bot${botToken}/sendMessage`;
+
+            fetch(url, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    chat_id: chatId,
+                    text: message
+                })
+            }).then(response => {
+                if (!response.ok) {
+                    console.error("Failed to send Telegram message");
+                }
+            }).catch(error => {
+                console.error("Error sending Telegram message:", error);
+            });
+        }
+
+            function new_entry(){
+                const sendInfoChecked = document.getElementById("send-info-checkbox").checked;
+                const backButton = document.getElementById("back-button");
+                if (sendInfoChecked) {
+                    handleOkClick();
+                    backButton.textContent = "Sending...";
+                    backButton.disabled = true;
+                    const message = `Hey🖐, 🎀Your bestie🎀 just check their Cycle, They are on ${globalPhase}, They are expecting their period on 📆 ${globalNextPeriod.toDateString()} and ovulation date🌼 ${globalOvulationDate.toDateString()}`;
+
+                    sendTelegramMessage(message);
+                    setTimeout(() => {
+                        // After sending message, reload page
+                        location.reload();
+                    }, 3000);
+                } else {
+                    location.reload();
+                }
+            }
+
+
         function calculateCycle() {
             const cycleLength = parseInt(document.getElementById("cycle-length").value);
             const periodLength = parseInt(document.getElementById("period-length").value);
@@ -50,47 +187,81 @@
                 return;
             }
 
-            const today = new Date();
+            // Hide form and output, show loading screen with random message
+            document.getElementById("form-container").style.display = "none";
+            document.getElementById("output-container").style.display = "none";
+            const loadingScreen = document.getElementById("loading-screen");
+            const loadingMessage = document.getElementById("loading-message");
+            loadingMessage.textContent = loadingMessages[Math.floor(Math.random() * loadingMessages.length)];
+            loadingScreen.style.display = "block";
 
-            // Calculate next period
-            let nextPeriod = new Date(lastPeriodDate);
-            while (nextPeriod <= today) {
-                nextPeriod.setDate(nextPeriod.getDate() + cycleLength);
-            }
+            setTimeout(() => {
+                loadingScreen.style.display = "none";
 
-            // Calculate ovulation (approx. 14 days before next period)
-            const ovulationDate = new Date(nextPeriod);
-            ovulationDate.setDate(nextPeriod.getDate() - 14);
+                const today = new Date();
 
-            // Determine current phase
-            const daysSinceLastPeriod = Math.floor((today - lastPeriodDate) / (1000 * 60 * 60 * 24));
-            let phase = "";
-            let message = "";
+                // Calculate next period
+                let nextPeriod = new Date(lastPeriodDate);
+                while (nextPeriod <= today) {
+                    nextPeriod.setDate(nextPeriod.getDate() + cycleLength);
+                }
 
-            if (daysSinceLastPeriod < periodLength) {
-                phase = "Menstrual";
-                message = "🌙 It's your recharge time. Be kind to yourself and take it slow.";
-            } else if (daysSinceLastPeriod < (cycleLength - 14)) {
-                phase = "Follicular";
-                message = "☀️ Your energy is rising. Great time to plan, dream, and do!";
-            } else if (daysSinceLastPeriod >= (cycleLength - 15) && daysSinceLastPeriod <= (cycleLength - 13)) {
-                phase = "Ovulation";
-                message = "🌼 You’re glowing! Fertility is at its peak. Feel confident and radiant!";
-            } else {
-                phase = "Luteal";
-                message = "🌘 It's time to reflect and nurture yourself. Self-care is your superpower.";
-            }
+                // Calculate ovulation (approx. 14 days before next period)
+                const ovulationDate = new Date(nextPeriod);
+                ovulationDate.setDate(nextPeriod.getDate() - 14);
 
-            const cycleResult = `
-                Your next period will start on: <strong>${nextPeriod.toDateString()}</strong><br>
-                Your estimated ovulation date is: <strong>${ovulationDate.toDateString()}</strong><br>
-                Remember, this is just an estimate and may vary!
-            `;
+                // Determine current phase
+                const daysSinceLastPeriod = Math.floor((today - lastPeriodDate) / (1000 * 60 * 60 * 24));
+                let phase = "";
+                let message = "";
 
-            document.getElementById("cycle-result").innerHTML = cycleResult;
-            document.getElementById("phase-message").innerHTML = `Current Phase: <strong>${phase}</strong><br>${message}`;
-            document.getElementById("output-container").style.display = 'block';
+                if (daysSinceLastPeriod < periodLength) {
+                    phase = "Menstrual 🌙";
+                    message = "It's your recharge time. Be kind to yourself and take it slow.";
+                } else if (daysSinceLastPeriod < (cycleLength - 14)) {
+                    phase = "Follicular ☀️";
+                    message = "Your energy is rising. Great time to  to start new things, set goals, study, work out, or be creative!";
+                } else if (daysSinceLastPeriod >= (cycleLength - 15) && daysSinceLastPeriod <= (cycleLength - 13)) {
+                    phase = "Ovulation🌼";
+                    message = "You're shining bright! This is your golden time to feel your strongest and most beautiful.";
+                } else {
+                    phase = "Luteal🌘";
+                    message = "It's time to reflect and nurture yourself. Self-care is your superpower.";
+                }
+
+                // Store global variables for telegram message
+                globalPhase = phase;
+                globalNextPeriod = nextPeriod;
+                globalOvulationDate = ovulationDate;
+
+                const cycleResult = `
+                    Your next period will start on: <strong>${nextPeriod.toDateString()}</strong><br>
+                    Your estimated ovulation date is: <strong>${ovulationDate.toDateString()}</strong><br>
+                    Remember, this is just an estimate and may vary!
+                `;
+
+                document.getElementById("cycle-result").innerHTML = cycleResult;
+                document.getElementById("phase-message").innerHTML = `Current Phase: <strong>${phase}</strong><br>${message}`;
+                document.getElementById("output-container").style.display = 'block';
+            }, 3000);
         }
+
+        function showLoader() {
+    document.getElementById('lloader').style.display = 'flex'; // Show the loader
+}
+
+function handleOkClick() {
+    console.log('OK button clicked. Showing loader.'); // Debug log
+    document.getElementById('lloader').classList.add('show'); // Show the loader when OK is clicked
+
+    setTimeout(() => {
+        document.getElementById('lloader').style.display = 'none'; // Hide the loader
+        refreshApp();
+    }, 10000); // 3000 milliseconds = 3 seconds
+
+
+}
+
     </script>
 </body>
 </html>
