@@ -226,3 +226,69 @@ button:hover {
 outputbutton:hover {
   background-color: #d81b60;
 }
+.calendar-container {
+  margin-top: 20px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-around;
+  gap: 20px;
+}
+
+.month-section {
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 12px;
+  padding: 15px;
+  width: 300px;
+  box-shadow: 0 0 10px rgba(255, 182, 193, 0.5);
+  text-align: center;
+}
+
+.month-section h3 {
+  margin: 0 0 10px;
+  font-size: 1.2rem;
+  color: #cc3366;
+}
+
+.calendar {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 5px;
+}
+
+.calendar-cell {
+  background: #fff;
+  border: 1px solid #ffc0cb;
+  border-radius: 8px;
+  padding: 5px 0;
+  font-size: 14px;
+  height: 45px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  transition: background-color 0.3s;
+}
+.calendar-cell:hover {
+  background-color: #d81b60;
+}
+
+
+.calendar-header {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  font-weight: bold;
+
+  padding: 10px 1000;
+}
+.calendar-header div {
+  text-align: center;
+}
+#toggle-button {
+  padding: 10px 20px;
+  width: fit-content;
+  margin-top: 10px;
+  cursor: pointer;
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 5px;
+}
